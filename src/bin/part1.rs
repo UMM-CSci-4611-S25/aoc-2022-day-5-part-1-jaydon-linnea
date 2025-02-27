@@ -92,7 +92,16 @@ impl FromStr for Stacks {
     // Note that the stack numbers start at 1 and you'll need the indices
     // in `Stacks::stacks` to start at 0.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        const LINE_COUNT: usize = s.lines().count();
+        let mut stacks: [Stack; LINE_COUNT];
+        let mut stackNum = 0;
+        for line in s.lines() {
+            stacks[stackNum] = Stack::from_str(line);
+
+            stackNum += 1;
+        }
+
+        Ok(Self {stacks})
     }
 }
 
@@ -111,7 +120,11 @@ impl FromStr for Stack {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        let stack: Vec<char> = s.chars()
+        .filter(|c| !c.is_whitespace() && c.is_alphabetic())
+        .collect();
+        // stack.remove(0);
+        Ok(Self {stack})
     }
 }
 
