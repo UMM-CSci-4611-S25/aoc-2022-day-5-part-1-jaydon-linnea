@@ -42,6 +42,7 @@ fn main() {
 pub enum ParseError {
     // Add different variants as you discover different kinds of parsing errors.
     // This could include things like too many stacks, illegal strings on a stack, etc.
+    IncorrectInstructionFormat
 }
 
 const NUM_STACKS: usize = 9;
@@ -173,7 +174,22 @@ impl FromStr for CraneInstruction {
     // then parse into `usize` using a `map` statement. You could also just
     // "reach" into the split string directly if you find that easier.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        let instructions: Result<Vec<usize>, std::num::ParseIntError> = s.split_ascii_whitespace()
+        .filter(|n| n.parse::<usize>().is_ok())
+        .map(|n| n.parse::<usize>()) 
+        .collect();
+
+        let instructions = instructions.unwrap();
+        
+        if instructions.len() != 3 {
+            return Err(ParseError::IncorrectInstructionFormat)
+        } 
+        
+        return  Ok( Self {
+            num_to_move: *instructions.get(0).unwrap(),
+            from_stack: *instructions.get(1).unwrap(),
+            to_stack: *instructions.get(2).unwrap()
+        })
     }
 }
 
@@ -181,11 +197,20 @@ struct CraneInstructions {
     instructions: Vec<CraneInstruction>,
 }
 
+
+
 impl FromStr for CraneInstructions {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        todo!()
+        let mut instructions: Vec<CraneInstruction> = Vec::new();
+        for line in s.lines() {
+            instructions.push(match CraneInstruction::from_str(line) {
+                Ok(value) => value,
+                Err(err) => return Err(err)
+            });
+        }
+        Ok(Self { instructions })
     }
 }
 
@@ -218,20 +243,20 @@ mod tests {
         assert_eq!(stacks.stacks[2], vec!['P']);
     }
 
-//     // Test that we can parse instructions correctly.
-//     #[test]
-//     #[ignore = "We haven't implemented instruction parsing yet"]
-//     fn test_instruction_parsing() {
-//         let input = "move 1 from 2 to 1\nmove 3 from 1 to 3";
-//         let instructions: CraneInstructions = input.parse().unwrap();
-//         assert_eq!(2, instructions.instructions.len());
-//         assert_eq!(1, instructions.instructions[0].num_to_move);
-//         assert_eq!(1, instructions.instructions[0].to_stack);
-//         assert_eq!(2, instructions.instructions[0].from_stack);
-//         assert_eq!(3, instructions.instructions[1].num_to_move);
-//         assert_eq!(3, instructions.instructions[1].to_stack);
-//         assert_eq!(1, instructions.instructions[1].from_stack);
-//     }
+    // Test that we can parse instructions correctly.
+    #[test]
+    // #[ignore = "We haven't implemented instruction parsing yet"]
+    fn test_instruction_parsing() {
+        let input = "move 1 from 2 to 1\nmove 3 from 1 to 3";
+        let instructions: CraneInstructions = input.parse().unwrap();
+        assert_eq!(2, instructions.instructions.len());
+        assert_eq!(1, instructions.instructions[0].num_to_move);
+        assert_eq!(1, instructions.instructions[0].to_stack);
+        assert_eq!(2, instructions.instructions[0].from_stack);
+        assert_eq!(3, instructions.instructions[1].num_to_move);
+        assert_eq!(3, instructions.instructions[1].to_stack);
+        assert_eq!(1, instructions.instructions[1].from_stack);
+    }
 
 //     // You probably want some tests that check that `apply_instruction` works as expected.
 //     // You might want to test that it moves the right number of items, that it moves them
