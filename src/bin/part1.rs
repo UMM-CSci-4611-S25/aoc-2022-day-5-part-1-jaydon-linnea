@@ -1,4 +1,4 @@
-use std::{fs, str::FromStr};
+use std::{ffi::NulError, fs, str::FromStr};
 
 static INPUT_FILE: &str = "input.txt";
 
@@ -47,7 +47,7 @@ pub enum ParseError {
 
 const NUM_STACKS: usize = 9;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Stacks {
     stacks: [Stack; NUM_STACKS],
 }
@@ -58,27 +58,61 @@ enum CraneError {
     // that can occur when applying a crane instruction.
     // This could include things like trying to move from an empty stack,
     // trying to get the top of an empty stack, etc.
+    OutOfBoundsFromStackInstruction,
+    OutOfBoundsToStackInstruction,
+    EmptyStack
 }
 
 impl Stacks {
     /// Apply a single instruction to the set of stacks in `self`.
     /// Return the new set of stacks, or a `CraneError` if the instruction
     /// is invalid.
-    fn apply_instruction(mut self, instruction: &CraneInstruction) -> Result<Self, CraneError> {
-        todo!()
+    fn apply_instruction(&mut self, instruction: &CraneInstruction) -> Result<Self, CraneError> {
+
+        if !(instruction.from_stack <= 9) {
+            return Err(CraneError::OutOfBoundsFromStackInstruction)
+        }
+        if !(instruction.to_stack <= 9) {
+            return Err(CraneError::OutOfBoundsToStackInstruction)
+        }
+
+        for n in 0..instruction.num_to_move {
+            let c: Option<char> = self.stacks[instruction.from_stack - 1].stack.pop();
+
+            match c {
+                Some(c) => self.stacks[instruction.to_stack - 1].stack.push(c),
+                None => ()
+            }
+        }
+
+
+        Ok(self.clone())
     }
 
     /// Perform each of these instructions in order on the set of stacks
     /// in `self`. Return the new set of stacks, or a `CraneError` if
     /// any of the instructions are invalid.
-    fn apply_instructions(self, instructions: &CraneInstructions) -> Result<Self, CraneError> {
-        todo!()
+    fn apply_instructions(mut self, instructions: &CraneInstructions) -> Result<Self, CraneError> {
+        let upper_bound = instructions.instructions.len();
+        for n in 0..upper_bound {
+            self.apply_instruction(&instructions.instructions[n])?;
+        }
+
+        Ok(self)
     }
 
     /// Return a string containing the top character of each stack in order.
     /// The stacks should all be non-empty; if any is empty return a `CraneError`.
     fn tops_string(&self) -> Result<String, CraneError> {
-        todo!()
+        let mut topString = "".to_string();
+        for n in 0..NUM_STACKS {
+            match self.stacks[n].stack.last() {
+                Some(c) => topString += &c.to_string(),
+                None => return Err(CraneError::EmptyStack),
+            }
+        }
+
+        Ok(topString)  
     }
 }
 
@@ -267,70 +301,70 @@ mod tests {
 
 //     // Test that the instruction `move 2 from 0 to 1` works as expected with non-empty
 //     // stacks.
-//     #[test]
-//     #[ignore = "We haven't implemented the `apply_instruction` method yet"]
-//     fn test_apply_instruction() {
-//         let stacks = Stacks {
-//             stacks: [
-//                 Stack {
-//                     stack: vec!['A', 'B', 'C'],
-//                 },
-//                 Stack {
-//                     stack: vec!['D', 'E', 'F'],
-//                 },
-//                 Stack {
-//                     stack: vec!['G', 'H', 'I'],
-//                 },
-//                 Stack { stack: Vec::new() },
-//                 Stack { stack: Vec::new() },
-//                 Stack { stack: Vec::new() },
-//                 Stack { stack: Vec::new() },
-//                 Stack { stack: Vec::new() },
-//                 Stack { stack: Vec::new() },
-//             ],
-//         };
+    #[test]
+    // #[ignore = "We haven't implemented the `apply_instruction` method yet"]
+    fn test_apply_instruction() {
+        let mut stacks = Stacks {
+            stacks: [
+                Stack {
+                    stack: vec!['A', 'B', 'C'],
+                },
+                Stack {
+                    stack: vec!['D', 'E', 'F'],
+                },
+                Stack {
+                    stack: vec!['G', 'H', 'I'],
+                },
+                Stack { stack: Vec::new() },
+                Stack { stack: Vec::new() },
+                Stack { stack: Vec::new() },
+                Stack { stack: Vec::new() },
+                Stack { stack: Vec::new() },
+                Stack { stack: Vec::new() },
+            ],
+        };
 
-//         let instruction = CraneInstruction {
-//             num_to_move: 2,
-//             from_stack: 0,
-//             to_stack: 1,
-//         };
+        let instruction = CraneInstruction {
+            num_to_move: 2,
+            from_stack: 1,
+            to_stack: 2,
+        };
 
-//         let new_stacks = stacks
-//             .apply_instruction(&instruction)
-//             .expect("Failed to apply instruction");
+        let new_stacks = stacks
+            .apply_instruction(&instruction)
+            .expect("Failed to apply instruction");
 
-//         assert_eq!(new_stacks.stacks[0], vec!['A']);
-//         assert_eq!(new_stacks.stacks[1], vec!['D', 'E', 'F', 'C', 'B']);
-//     }
+        assert_eq!(new_stacks.stacks[0], vec!['A']);
+        assert_eq!(new_stacks.stacks[1], vec!['D', 'E', 'F', 'C', 'B']);
+    }
 
-//     // This essentially runs `main()` and checks that the results are correct for part 1.
-//     #[test]
-//     #[ignore = "We haven't implemented the `apply_instructions` method yet"]
-//     fn test_part_1() {
-//         let contents =
-//             fs::read_to_string(INPUT_FILE).expect(&format!("Failed to open file '{INPUT_FILE}'"));
+    // This essentially runs `main()` and checks that the results are correct for part 1.
+    #[test]
+    //#[ignore = "We haven't implemented the `apply_instructions` method yet"]
+    fn test_part_1() {
+        let contents =
+            fs::read_to_string(INPUT_FILE).expect(&format!("Failed to open file '{INPUT_FILE}'"));
 
-//         let (stack_config, instructions) = contents
-//             .split_once("\n\n")
-//             .expect("There was no blank line in the input");
+        let (stack_config, instructions) = contents
+            .split_once("\n\n")
+            .expect("There was no blank line in the input");
 
-//         let stacks: Stacks = stack_config
-//             .parse()
-//             .expect("Failed to parse stack configuration");
+        let stacks: Stacks = stack_config
+            .parse()
+            .expect("Failed to parse stack configuration");
 
-//         let instructions: CraneInstructions = instructions
-//             .parse()
-//             .expect("Failed to parse crane instructions");
+        let instructions: CraneInstructions = instructions
+            .parse()
+            .expect("Failed to parse crane instructions");
 
-//         let final_state = stacks
-//             .apply_instructions(&instructions)
-//             .expect("Applying an instruction set failed");
+        let final_state = stacks
+            .apply_instructions(&instructions)
+            .expect("Applying an instruction set failed");
 
-//         let stack_tops = final_state
-//             .tops_string()
-//             .expect("Tried to take the top of an empty stack");
+        let stack_tops = final_state
+            .tops_string()
+            .expect("Tried to take the top of an empty stack");
 
-//         assert_eq!("SBPQRSCDF", stack_tops);
-//     }
+        assert_eq!("SBPQRSCDF", stack_tops);
+    }
 }
