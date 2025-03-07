@@ -92,25 +92,27 @@ impl FromStr for Stacks {
     // Note that the stack numbers start at 1 and you'll need the indices
     // in `Stacks::stacks` to start at 0.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut stacks_vec: Vec<Stack>;
-        let mut stacks: [Stack; NUM_STACKS];
-        let mut stackNum: usize = 0;
+        let mut stacks_vec: Vec<Stack> = Vec::new();
+        let mut stacks: [Stack; NUM_STACKS] = Default::default();
+        // let mut stackNum: usize = 0;
         for line in s.lines() {
             stacks_vec.push(match Stack::from_str(line) {
                 Ok(value) => value,
                 Err(err) => return Err(err)
             });
 
-            stackNum += 1;
+            // stackNum += 1;
         }
-        for i in 1..NUM_STACKS {
-            stacks[i] = *stacks_vec.get(i).unwrap();
+        for i in 0..NUM_STACKS {
+            if(stacks_vec.get(i) != None) {
+            stacks[i] = stacks_vec.get(i).unwrap().clone();
+            }
         }
         Ok(Self {stacks})
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Stack {
     stack: Vec<char>,
 }
@@ -139,7 +141,18 @@ impl FromStr for Stack {
 // using something like ``assert_eq!(stack, vec!['A', 'B', 'C'])`.
 impl PartialEq<Vec<char>> for Stack {
     fn eq(&self, other: &Vec<char>) -> bool {
-        todo!()
+        if other.len() != self.len() {
+            false
+        } else{
+            for n in 0..self.len() {
+                if other[n] != self.stack[n] {
+                    return false
+                }
+            }
+
+            true
+        }
+
     }
 }
 
@@ -186,7 +199,7 @@ mod tests {
 
     // Test that we can parse stacks correctly.
     #[test]
-    #[ignore = "We haven't implemented stack parsing yet"]
+    // #[ignore = "We haven't implemented stack parsing yet"]
     fn test_from_str() {
         // The `\` at the end of the line escapes the newline and all following whitespace.
         let input = "1 Z N\n\
@@ -205,94 +218,94 @@ mod tests {
         assert_eq!(stacks.stacks[2], vec!['P']);
     }
 
-    // Test that we can parse instructions correctly.
-    #[test]
-    #[ignore = "We haven't implemented instruction parsing yet"]
-    fn test_instruction_parsing() {
-        let input = "move 1 from 2 to 1\nmove 3 from 1 to 3";
-        let instructions: CraneInstructions = input.parse().unwrap();
-        assert_eq!(2, instructions.instructions.len());
-        assert_eq!(1, instructions.instructions[0].num_to_move);
-        assert_eq!(1, instructions.instructions[0].to_stack);
-        assert_eq!(2, instructions.instructions[0].from_stack);
-        assert_eq!(3, instructions.instructions[1].num_to_move);
-        assert_eq!(3, instructions.instructions[1].to_stack);
-        assert_eq!(1, instructions.instructions[1].from_stack);
-    }
+//     // Test that we can parse instructions correctly.
+//     #[test]
+//     #[ignore = "We haven't implemented instruction parsing yet"]
+//     fn test_instruction_parsing() {
+//         let input = "move 1 from 2 to 1\nmove 3 from 1 to 3";
+//         let instructions: CraneInstructions = input.parse().unwrap();
+//         assert_eq!(2, instructions.instructions.len());
+//         assert_eq!(1, instructions.instructions[0].num_to_move);
+//         assert_eq!(1, instructions.instructions[0].to_stack);
+//         assert_eq!(2, instructions.instructions[0].from_stack);
+//         assert_eq!(3, instructions.instructions[1].num_to_move);
+//         assert_eq!(3, instructions.instructions[1].to_stack);
+//         assert_eq!(1, instructions.instructions[1].from_stack);
+//     }
 
-    // You probably want some tests that check that `apply_instruction` works as expected.
-    // You might want to test that it moves the right number of items, that it moves them
-    // from the right stack, that it moves them to the right stack, and that it doesn't
-    // move items from an empty stack. Below is a simple test that checks that the
-    // instruction `move 2 from 0 to 1` moves two items from stack 0 to stack 1, but you
-    // probably want more than that.
+//     // You probably want some tests that check that `apply_instruction` works as expected.
+//     // You might want to test that it moves the right number of items, that it moves them
+//     // from the right stack, that it moves them to the right stack, and that it doesn't
+//     // move items from an empty stack. Below is a simple test that checks that the
+//     // instruction `move 2 from 0 to 1` moves two items from stack 0 to stack 1, but you
+//     // probably want more than that.
 
-    // Test that the instruction `move 2 from 0 to 1` works as expected with non-empty
-    // stacks.
-    #[test]
-    #[ignore = "We haven't implemented the `apply_instruction` method yet"]
-    fn test_apply_instruction() {
-        let stacks = Stacks {
-            stacks: [
-                Stack {
-                    stack: vec!['A', 'B', 'C'],
-                },
-                Stack {
-                    stack: vec!['D', 'E', 'F'],
-                },
-                Stack {
-                    stack: vec!['G', 'H', 'I'],
-                },
-                Stack { stack: Vec::new() },
-                Stack { stack: Vec::new() },
-                Stack { stack: Vec::new() },
-                Stack { stack: Vec::new() },
-                Stack { stack: Vec::new() },
-                Stack { stack: Vec::new() },
-            ],
-        };
+//     // Test that the instruction `move 2 from 0 to 1` works as expected with non-empty
+//     // stacks.
+//     #[test]
+//     #[ignore = "We haven't implemented the `apply_instruction` method yet"]
+//     fn test_apply_instruction() {
+//         let stacks = Stacks {
+//             stacks: [
+//                 Stack {
+//                     stack: vec!['A', 'B', 'C'],
+//                 },
+//                 Stack {
+//                     stack: vec!['D', 'E', 'F'],
+//                 },
+//                 Stack {
+//                     stack: vec!['G', 'H', 'I'],
+//                 },
+//                 Stack { stack: Vec::new() },
+//                 Stack { stack: Vec::new() },
+//                 Stack { stack: Vec::new() },
+//                 Stack { stack: Vec::new() },
+//                 Stack { stack: Vec::new() },
+//                 Stack { stack: Vec::new() },
+//             ],
+//         };
 
-        let instruction = CraneInstruction {
-            num_to_move: 2,
-            from_stack: 0,
-            to_stack: 1,
-        };
+//         let instruction = CraneInstruction {
+//             num_to_move: 2,
+//             from_stack: 0,
+//             to_stack: 1,
+//         };
 
-        let new_stacks = stacks
-            .apply_instruction(&instruction)
-            .expect("Failed to apply instruction");
+//         let new_stacks = stacks
+//             .apply_instruction(&instruction)
+//             .expect("Failed to apply instruction");
 
-        assert_eq!(new_stacks.stacks[0], vec!['A']);
-        assert_eq!(new_stacks.stacks[1], vec!['D', 'E', 'F', 'C', 'B']);
-    }
+//         assert_eq!(new_stacks.stacks[0], vec!['A']);
+//         assert_eq!(new_stacks.stacks[1], vec!['D', 'E', 'F', 'C', 'B']);
+//     }
 
-    // This essentially runs `main()` and checks that the results are correct for part 1.
-    #[test]
-    #[ignore = "We haven't implemented the `apply_instructions` method yet"]
-    fn test_part_1() {
-        let contents =
-            fs::read_to_string(INPUT_FILE).expect(&format!("Failed to open file '{INPUT_FILE}'"));
+//     // This essentially runs `main()` and checks that the results are correct for part 1.
+//     #[test]
+//     #[ignore = "We haven't implemented the `apply_instructions` method yet"]
+//     fn test_part_1() {
+//         let contents =
+//             fs::read_to_string(INPUT_FILE).expect(&format!("Failed to open file '{INPUT_FILE}'"));
 
-        let (stack_config, instructions) = contents
-            .split_once("\n\n")
-            .expect("There was no blank line in the input");
+//         let (stack_config, instructions) = contents
+//             .split_once("\n\n")
+//             .expect("There was no blank line in the input");
 
-        let stacks: Stacks = stack_config
-            .parse()
-            .expect("Failed to parse stack configuration");
+//         let stacks: Stacks = stack_config
+//             .parse()
+//             .expect("Failed to parse stack configuration");
 
-        let instructions: CraneInstructions = instructions
-            .parse()
-            .expect("Failed to parse crane instructions");
+//         let instructions: CraneInstructions = instructions
+//             .parse()
+//             .expect("Failed to parse crane instructions");
 
-        let final_state = stacks
-            .apply_instructions(&instructions)
-            .expect("Applying an instruction set failed");
+//         let final_state = stacks
+//             .apply_instructions(&instructions)
+//             .expect("Applying an instruction set failed");
 
-        let stack_tops = final_state
-            .tops_string()
-            .expect("Tried to take the top of an empty stack");
+//         let stack_tops = final_state
+//             .tops_string()
+//             .expect("Tried to take the top of an empty stack");
 
-        assert_eq!("SBPQRSCDF", stack_tops);
-    }
+//         assert_eq!("SBPQRSCDF", stack_tops);
+//     }
 }
